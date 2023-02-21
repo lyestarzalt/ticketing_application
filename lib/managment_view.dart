@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
 class ManagementView extends StatefulWidget {
   @override
@@ -15,45 +16,46 @@ class _ManagementViewState extends State<ManagementView> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        height: MediaQuery.of(context).size.height * 0.8,
-        width: MediaQuery.of(context).size.width * 0.8,
-        child: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection('counters').snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            } else if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            } else {
-              final counterDocs = snapshot.data!.docs;
+    return Scaffold(
+      body: Container(
+        height: MediaQuery.of(context).size.height * 0.5,
+        width: MediaQuery.of(context).size.width * 0.5,
+        child: Center(
+          child: StreamBuilder<QuerySnapshot>(
+            stream:
+                FirebaseFirestore.instance.collection('counters').snapshots(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else {
+                final counterDocs = snapshot.data!.docs;
 
-              // Map the document data to the CounterData model
-              final counters = counterDocs
-                  .map((doc) => CounterData(
-                        counterNumber: doc.id,
-                        status: doc.get('status'),
-                        currentNumber: doc.get('current_ticket'),
-                        is_online: doc.get('is_online'),
-                      ))
-                  .toList();
-
-              // Build the UI using the CounterCard widget and
-              //the CounterData model
-              return Row(
-                children: counters
-                    .map((counterData) => Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: CounterCard(counterData: counterData),
-                          ),
+                // Map the document data to the CounterData model
+                final counters = counterDocs
+                    .map((doc) => CounterData(
+                          counterNumber: doc.id,
+                          status: doc.get('status'),
+                          currentNumber: doc.get('current_ticket'),
+                          is_online: doc.get('is_online'),
                         ))
-                    .toList(),
-              );
-            }
-          },
-        ));
+                    .toList();
+                final counterCards = counters
+                    .map((counterData) => CounterCard(counterData: counterData))
+                    .toList();
+                // Build the UI using the CounterCard widget and
+                //the CounterData model
+                return Container(
+                  child: Wrap(children: counterCards),
+                );
+              }
+            },
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -140,17 +142,17 @@ class CounterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Card(
+    return SizedBox(
+      width: 200,
+      height: 300,
+      child: Card(
         child: Column(
           children: [
             Row(
               children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('Counter ${counterData.counterNumber}'),
-                  ),
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('Counter ${counterData.counterNumber}'),
                 ),
               ],
             ),
