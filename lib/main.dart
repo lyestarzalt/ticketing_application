@@ -10,7 +10,13 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(Ticketmain());
+  runApp(MaterialApp(
+    title: 'Ticket Counter',
+    theme: ThemeData(
+      primarySwatch: Colors.blue,
+    ),
+    home: Ticketmain(),
+  ));
 }
 
 // basic material app
@@ -18,12 +24,35 @@ void main() async {
 class Ticketmain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: ManagementView(),
-    );
+    return Scaffold(
+        body: Row(
+      children: [
+        Expanded(
+          // half screen button taht will take you to the client view use stack
+
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TicketDashboard()),
+              );
+            },
+            child: Text('Client View'),
+          ),
+        ),
+        Expanded(
+          // half screen button taht will take you to the management view
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ManagementView()),
+              );
+            },
+            child: Text('Management View'),
+          ),
+        ),
+      ],
+    ));
   }
 }

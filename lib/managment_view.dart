@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -17,62 +16,120 @@ class _ManagementViewState extends State<ManagementView> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.8,
-      width: MediaQuery.of(context).size.width * 0.8,
-      child: Row(
-        children: [
-          CounterCard(counterNumber: '1', status: 'online'),
-          CounterCard(counterNumber: '2', status: 'offline'),
-          CounterCard(counterNumber: '3', status: 'online'),
-          CounterCard(counterNumber: '4', status: 'offline'),
-        ],
-      ),
-    );
+        height: MediaQuery.of(context).size.height * 0.8,
+        width: MediaQuery.of(context).size.width * 0.8,
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('counters').snapshots(),
+          builder:
+              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else {
+              final counterDocs = snapshot.data!.docs;
+
+              // Map the document data to the CounterData model
+              final counters = counterDocs
+                  .map((doc) => CounterData(
+                        counterNumber: doc.id,
+                        status: doc.get('status'),
+                        currentNumber: doc.get('current_ticket'),
+                        is_online: doc.get('is_online'),
+                      ))
+                  .toList();
+
+              // Build the UI using the CounterCard widget and
+              //the CounterData model
+              return Row(
+                children: counters
+                    .map((counterData) => Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: CounterCard(counterData: counterData),
+                          ),
+                        ))
+                    .toList(),
+              );
+            }
+          },
+        ));
   }
 }
 
-class CounterManagmentCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [],
-    );
-  }
-}
+Future<bool> _callNext(String counterNumber) async {
+  // TODO: very ugly code. I will refactor it later. I am tired.(split functions
+  // and make it more readable)
 
-Future<void> _callNext(String  counterNumber) async {
+  // get the oldest ticket that is not assigned to a counter
   final ticketQuery = FirebaseFirestore.instance
       .collection('tickets')
-      .where('counter_number', isEqualTo: '')
-      .orderBy('timestamp')
+      .where('counter_number', isNull: true)
+      .orderBy('ticket_number', descending: false)
       .limit(1);
+  final counterDoc =
+      FirebaseFirestore.instance.collection('counters').doc(counterNumber);
+
+  // get the last ticket of the counter
 
   final ticketSnapshot = await ticketQuery.get();
+  final ticketDocs = ticketSnapshot.docs;
+  final ticket = ticketDocs.isNotEmpty ? ticketDocs.first : null;
+  final currentCounter = await counterDoc.get();
+  if (ticket != null) {
+    // Update ticket with counter number
 
-  if (ticketSnapshot.docs.isNotEmpty) {
-    final ticketDoc = ticketSnapshot.docs.first;
-    await ticketDoc.reference.update({'counter_number': counterNumber});
+    await ticket.reference.update({'counter_number': counterNumber});
+
+    // update the counter info
+    int lastTicketNumber = currentCounter.data()!['current_ticket'];
+    print('last ticket number: $lastTicketNumber');
+    // Update counter with current ticket number
+    final counterDoc =
+        FirebaseFirestore.instance.collection('counters').doc(counterNumber);
+    int currentTicketNumber = ticket.data()['ticket_number'];
+    final counterSnapshot = await counterDoc.get();
+    if (counterSnapshot.exists) {
+      await counterDoc.update({
+        'status': false,
+        'current_ticket': currentTicketNumber,
+        'last_ticket': lastTicketNumber
+      });
+    }
+    return true;
+  } else {
+    // In case there are no tickets, set the counter status to true and currect
+    // ticket to 0
+
+    final counterSnapshot = await counterDoc.get();
+    if (counterSnapshot.exists) {
+      await counterDoc.update({'status': true, 'current_ticket': 0});
+      return false;
+    } else {
+      // we should handle this case, probably a try catch.
+      return false;
+    }
   }
 }
 
-
-void _toggleCounterStatus(String counterNumber, String currentStatus) async {
+void _toggleCounterStatus(String counterNumber, bool currentStatus) async {
+  // since we are using a stream builder we dont  need to update the UI using a
+  // return value, the UI will be updated automatically once its set here.
   final counterDoc =
       FirebaseFirestore.instance.collection('counters').doc(counterNumber);
-  final newStatus = currentStatus == 'online' ? 'offline' : 'online';
+  final newStatus = currentStatus == true ? false : true;
   await counterDoc.update({'is_online': newStatus});
 }
-
 
 void _completeCurrent(String counterNumber) async {
   final counterRef =
       FirebaseFirestore.instance.collection('counters').doc(counterNumber);
   final counterDoc = await counterRef.get();
   final lastTicket = counterDoc.data()!['current_ticket'];
-
   await counterRef.update({
     'status': true,
     'last_ticket': lastTicket,
+    'current_ticket': 0,
   });
 }
 
@@ -83,55 +140,60 @@ class CounterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  child: Text('Counter ${counterData.counterNumber}'),
-                  padding: EdgeInsets.all(8.0),
+    return Scaffold(
+      body: Card(
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('Counter ${counterData.counterNumber}'),
+                  ),
                 ),
-              ),
-              Container(
-                width: 16.0,
-                height: 16.0,
-                decoration: BoxDecoration(
-                  color: counterData.status == 'online'
-                      ? Colors.green
-                      : Colors.red,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
-          ),
-          Container(
-            padding: EdgeInsets.all(8.0),
-            child: Text(
-              'Current Number: ${counterData.currentNumber}',
+              ],
             ),
-          ),
-          ButtonBar(
-            children: [
-              ElevatedButton(
-                child: Text('Call Next'),
-                onPressed: () => _callNext(counterData.counterNumber),
-              ),
-              ElevatedButton(
-                child: Text('Complete Current'),
-                onPressed: () => _completeCurrent(counterData.counterNumber),
-              ),
-              ElevatedButton(
-                child: Text(counterData.status == 'online'
-                    ? 'Go Offline'
-                    : 'Go Online'),
-                onPressed: () =>
-                    _toggleCounterStatus(counterData.counterNumber),
-              ),
-            ],
-          ),
-        ],
+            ButtonBar(
+              children: [
+                ElevatedButton(
+                  child: Text('Call Next'),
+                  onPressed: () =>
+                      _callNext(counterData.counterNumber).then((value) => {
+                            if (value == true)
+                              {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Next ticket called'),
+                                  ),
+                                )
+                              }
+                            else
+                              {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content:
+                                        Text('No tickets, get some rest :) '),
+                                  ),
+                                )
+                              }
+                          }),
+                ),
+                ElevatedButton(
+                  child: Text('Complete Current'),
+                  onPressed: () => _completeCurrent(counterData.counterNumber),
+                ),
+                ElevatedButton(
+                  child: Text(counterData.is_online == true
+                      ? 'Go Offline'
+                      : 'Go Online'),
+                  onPressed: () => _toggleCounterStatus(
+                      counterData.counterNumber, counterData.is_online),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -139,12 +201,14 @@ class CounterCard extends StatelessWidget {
 
 class CounterData {
   final String counterNumber;
-  final String status;
+  final bool status;
+  final bool is_online;
   final int currentNumber;
 
   CounterData({
     required this.counterNumber,
     required this.status,
+    required this.is_online,
     required this.currentNumber,
   });
 }
