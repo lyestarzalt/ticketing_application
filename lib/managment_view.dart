@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -46,14 +47,10 @@ class _ManagementViewState extends State<ManagementView> {
                     .toList();
                 // Build the UI using the CounterCard widget and
                 //the CounterData model
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    alignment: WrapAlignment.center,
-                    children: counterCards,
-                  ),
+                return Row(
+                  // space between the counters
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: counterCards,
                 );
               }
             },
@@ -144,62 +141,75 @@ class CounterCard extends StatelessWidget {
   final CounterData counterData;
 
   CounterCard({required this.counterData});
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 200, // Set the width to 80% of the screen width
+    return SizedBox(
+      width: 150,
+      height: 300,
       child: Card(
+        margin: const EdgeInsets.all(8),
+        elevation: 4,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              child: Text('Counter ${counterData.counterNumber}'),
+            Text(
+              '${counterData.counterNumber}',
+              style: TextStyle(
+                fontSize: 24, // Increase font size for counter name
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            ButtonBar(
-              alignment: MainAxisAlignment.center,
-              buttonMinWidth: 160,
-
-              // put space between buttons
-              buttonHeight: 50,
-              children: [
-                ElevatedButton(
-                  child: Text('Call Next'),
-                  onPressed: () =>
-                      _callNext(counterData.counterNumber).then((value) => {
-                            if (value == true)
-                              {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Next ticket called'),
-                                  ),
-                                )
-                              }
-                            else
-                              {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                        Text('No tickets, get some rest :) '),
-                                  ),
-                                )
-                              }
-                          }),
+            ElevatedButton(
+              child: Text(
+                'Call Next',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-                ElevatedButton(
-                  child: const Text('Complete\n Current'),
-                  onPressed: () => _completeCurrent(counterData.counterNumber),
+              ),
+              onPressed: () =>
+                  _callNext(counterData.counterNumber).then((value) => {
+                        if (value == true)
+                          {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Next ticket called'),
+                              ),
+                            )
+                          }
+                        else
+                          {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('No tickets!, get some rest :)'),
+                              ),
+                            )
+                          }
+                      }),
+            ),
+            ElevatedButton(
+              child: Text(
+                'Complete\nCurrent',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-                ElevatedButton(
-                  child: Text(counterData.is_online == true
-                      ? 'Go Offline'
-                      : 'Go Online'),
-                  onPressed: () => _toggleCounterStatus(
-                      counterData.counterNumber, counterData.is_online),
+              ),
+              onPressed: () => _completeCurrent(counterData.counterNumber),
+            ),
+            ElevatedButton(
+              child: Text(
+                counterData.is_online == true ? 'Go Offline' : 'Go Online',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-              ],
+              ),
+              onPressed: () => _toggleCounterStatus(
+                counterData.counterNumber,
+                counterData.is_online,
+              ),
             ),
           ],
         ),
