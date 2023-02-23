@@ -19,16 +19,16 @@ class _TicketDashboardState extends State<TicketDashboard> {
   }
 
   Future _showTicketNumberPopup(
-      BuildContext _context, String ticketNumber) async {
+      BuildContext contextArg, String ticketNumber) async {
     showDialog(
-      context: _context,
+      context: contextArg,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Ticket Number'),
           content: Text('Your ticket number is $ticketNumber.'),
           actions: [
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -70,7 +70,6 @@ class _TicketDashboardState extends State<TicketDashboard> {
               // last ticket number
               var lastTicket = ticketSnapshot.data!.docs.first.data() as Map;
               var lastTicketNumber = lastTicket['ticket_number'];
-              print('last ticket number: $lastTicketNumber');
 
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -103,7 +102,7 @@ class _TicketDashboardState extends State<TicketDashboard> {
                     counterSnapshot.data!.docs.forEach((doc) {
                       _counters[doc.id] = doc.data() as Map<String, dynamic>;
                     });
-                    
+
                     return Column(
                       children: [
                         SizedBox(

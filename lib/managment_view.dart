@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/services.dart';
 
 class ManagementView extends StatefulWidget {
   @override
@@ -18,8 +17,8 @@ class _ManagementViewState extends State<ManagementView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        height: MediaQuery.of(context).size.height * 0.5,
-        width: MediaQuery.of(context).size.width * 0.5,
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
         child: Center(
           child: StreamBuilder<QuerySnapshot>(
             stream:
@@ -47,8 +46,14 @@ class _ManagementViewState extends State<ManagementView> {
                     .toList();
                 // Build the UI using the CounterCard widget and
                 //the CounterData model
-                return Container(
-                  child: Wrap(children: counterCards),
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.center,
+                    children: counterCards,
+                  ),
                 );
               }
             },
@@ -60,7 +65,7 @@ class _ManagementViewState extends State<ManagementView> {
 }
 
 Future<bool> _callNext(String counterNumber) async {
-  // TODO: very ugly code. I will refactor it later. I am tired.(split functions
+  // TODO: god forgive me. I will refactor it later. I am tired.(split functions
   // and make it more readable)
 
   // get the oldest ticket that is not assigned to a counter
@@ -142,21 +147,23 @@ class CounterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 200,
-      height: 300,
+    return Container(
+      width: 200, // Set the width to 80% of the screen width
       child: Card(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('Counter ${counterData.counterNumber}'),
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('Counter ${counterData.counterNumber}'),
             ),
             ButtonBar(
+              alignment: MainAxisAlignment.center,
+              buttonMinWidth: 160,
+
+              // put space between buttons
+              buttonHeight: 50,
               children: [
                 ElevatedButton(
                   child: Text('Call Next'),
@@ -165,7 +172,7 @@ class CounterCard extends StatelessWidget {
                             if (value == true)
                               {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text('Next ticket called'),
                                   ),
                                 )
@@ -173,7 +180,7 @@ class CounterCard extends StatelessWidget {
                             else
                               {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content:
                                         Text('No tickets, get some rest :) '),
                                   ),
@@ -182,7 +189,7 @@ class CounterCard extends StatelessWidget {
                           }),
                 ),
                 ElevatedButton(
-                  child: Text('Complete Current'),
+                  child: const Text('Complete\n Current'),
                   onPressed: () => _completeCurrent(counterData.counterNumber),
                 ),
                 ElevatedButton(
