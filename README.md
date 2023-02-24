@@ -1,16 +1,28 @@
-# ticket_app
+# Ticketing Website
 
-A new Flutter project.
+This is a ticketing website built with Flutter, consisting of two views: a client view for customers to obtain tickets, and a management view for staff to manage the ticketing process.
 
-## Getting Started
+## How to Build and Run
 
-This project is a starting point for a Flutter application.
+To build and run the website, follow these steps:
 
-A few resources to get you started if this is your first Flutter project:
+1. Make sure you have Flutter installed. See [Flutter documentation](https://flutter.dev/docs/get-started/install) for installation instructions.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Clone the repository:
+`git clone https://github.com/lyestarzalt/ticketing_application`
+3. Install the required dependencies:
+`flutter pub get`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+4. Build the website using the following command:
+`flutter build web --release`
+
+5. Run the website in Chrome using the following command:
+`flutter run -d chrome --release`
+
+## Contributions
+
+Contributions to the ticketing website are welcome. If you have any feature requests, bug reports, or suggestions for improvement, please submit them as issues on the GitHub repository.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

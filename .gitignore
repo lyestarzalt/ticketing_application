@@ -47,3 +47,9 @@ app.*.map.json
 #Firebase
 google-services.json
 firebase_options.dart
+
+# deployment
+.env
+/public
+.firebase
+/.firebase
