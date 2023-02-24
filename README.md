@@ -2,6 +2,8 @@
 
 This is a ticketing website built with Flutter, consisting of two views: a client view for customers to obtain tickets, and a management view for staff to manage the ticketing process.
 
+A demo of the website can be found at <https://ticketing-75603.web.app/#/>
+
 ## How to Build and Run
 
 To build and run the website, follow these steps:
